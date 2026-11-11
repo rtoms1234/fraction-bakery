@@ -223,7 +223,7 @@ function load(){ try{ const raw = localStorage.getItem(KEY); if(raw) return Obje
 function save(){ S.savedAt=Date.now(); try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} refreshPills(); queueSync(); }
 
 /* ---------- home base: a Google Sheet behind an Apps Script web app (no sign-in needed to play) ---------- */
-const REPORT_URL = ''; // paste the deployed Apps Script web app URL here, or set it in the Grown-up corner
+const REPORT_URL = 'https://script.google.com/macros/s/AKfycbwEapljmtUxGmRXwYGs3XjmD_CaXfEyset86fKyzoHTyKohHjKIy-VoZR1ZICdP4g-pdg/exec'; // RT's "Fraction Bakery Log" sheet; can be overridden in the Grown-up corner
 function reportUrl(){ try{ return localStorage.getItem('fractionBakery.reportUrl') || REPORT_URL; }catch(e){ return REPORT_URL; } }
 async function postHome(payload){ const u=reportUrl(); if(!u) return false;
   try{ const r=await fetch(u,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload)}); return r.ok; }catch(e){ return false; } }
