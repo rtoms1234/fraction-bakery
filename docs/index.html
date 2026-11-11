@@ -1,0 +1,825 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="mobile-web-app-capable" content="yes"><meta name="theme-color" content="#FFF6FA"><link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Ctext y=%27.9em%27 font-size=%2790%27%3E%F0%9F%A7%81%3C/text%3E%3C/svg%3E"><link rel="apple-touch-icon" href="icon.png"><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font-family:system-ui,sans-serif;font-size:14px}img{max-width:100%}[hidden]{display:none!important}</style></head><body><title>Fraction Bakery</title>
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&display=swap">
+<style>
+/* Layout: phone-first one-column app (max 540px), screens swapped in place, big tap targets, sticky top bar with coins */
+:root{
+  --bg:#FFF6FA; --surface:#FFFFFF; --surface2:#FFECF3; --ink:#3B2A4A; --ink2:#7D6B8F; --line:#F2D3E3; --cut:#D9B4CB;
+  --berry:#FF5C9D; --berry-deep:#D93A7C; --grape:#7B61FF; --grape-deep:#5A42D6; --mint:#2FCB9A; --lemon:#FFD24D; --sky:#4CC3F0; --peach:#FF9F6E;
+  --good:#2DBE86; --bad:#FF6B6B; --good-bg:#E3FBF1; --bad-bg:#FFE9E9; --hint-bg:#FFF5D6;
+  --shadow:#F0C4D8; --shadow2:#E3B3CB;
+  --display:'Fredoka',system-ui,sans-serif; --body:'Nunito',system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#1F1832; --surface:#2C2347; --surface2:#3A2E5C; --ink:#FFF3F9; --ink2:#C7B6DE; --line:#4A3C70; --cut:#6E5C96;
+  --good-bg:#1F4A3A; --bad-bg:#4A2430; --hint-bg:#4A3E1F; --shadow:#171127; --shadow2:#120D20; color-scheme:dark } }
+:root[data-theme="dark"]{
+  --bg:#1F1832; --surface:#2C2347; --surface2:#3A2E5C; --ink:#FFF3F9; --ink2:#C7B6DE; --line:#4A3C70; --cut:#6E5C96;
+  --good-bg:#1F4A3A; --bad-bg:#4A2430; --hint-bg:#4A3E1F; --shadow:#171127; --shadow2:#120D20; color-scheme:dark }
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.4;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0;
+  -webkit-tap-highlight-color:transparent;overflow-x:hidden}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+#app{max-width:540px;margin:0 auto;min-height:100%;display:flex;flex-direction:column;gap:12px;padding-bottom:28px}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+button:focus-visible,input:focus-visible,[tabindex]:focus-visible{outline:3px solid var(--sky);outline-offset:2px}
+h1,h2,h3{font-family:var(--display);font-weight:600;margin:0;text-wrap:balance;line-height:1.15}
+h1{font-size:2rem}h2{font-size:1.5rem}h3{font-size:1.15rem}
+.muted{color:var(--ink2)}
+.small{font-size:.9rem}
+
+/* top bar */
+.top{display:flex;align-items:center;justify-content:space-between;gap:8px;padding-block:10px 4px;position:sticky;top:env(safe-area-inset-top,0px);background:var(--bg);z-index:5}
+.brand{display:flex;align-items:center;gap:8px;font-family:var(--display);font-weight:600;font-size:1.1rem}
+.brand .mascot{font-size:1.6rem}
+.pills{display:flex;gap:6px}
+.pill{display:inline-flex;align-items:center;gap:4px;background:var(--surface);border:2px solid var(--line);border-radius:999px;padding:4px 10px;font-family:var(--display);font-weight:600;font-size:.95rem;font-variant-numeric:tabular-nums}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font-family:var(--display);font-weight:600;font-size:1.15rem;
+  padding:14px 22px;border-radius:18px;background:var(--surface);color:var(--ink);box-shadow:0 5px 0 var(--shadow);border:2px solid var(--line);
+  transition:transform .08s,box-shadow .08s;user-select:none;min-height:54px}
+.btn:active{transform:translateY(4px);box-shadow:0 1px 0 var(--shadow)}
+.btn.primary{background:var(--berry);color:#fff;border-color:var(--berry);box-shadow:0 5px 0 var(--berry-deep)}
+.btn.primary:active{box-shadow:0 1px 0 var(--berry-deep)}
+.btn.grape{background:var(--grape);color:#fff;border-color:var(--grape);box-shadow:0 5px 0 var(--grape-deep)}
+.btn.grape:active{box-shadow:0 1px 0 var(--grape-deep)}
+.btn.mint{background:var(--mint);color:#17352B;border-color:var(--mint);box-shadow:0 5px 0 #1E9C74}
+.btn.big{width:100%;font-size:1.3rem;padding:16px 22px}
+.btn[disabled]{opacity:.45;pointer-events:none}
+.btn.ghost{box-shadow:none;border-color:transparent;background:transparent;color:var(--ink2);min-height:40px;padding:8px 12px;font-size:1rem}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.row>.btn{flex:1 1 140px}
+
+/* cards */
+.card{background:var(--surface);border:2px solid var(--line);border-radius:22px;padding:18px;box-shadow:0 6px 0 var(--shadow)}
+.card.flat{box-shadow:none}
+
+/* stacked fractions */
+.fr{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;line-height:1;font-family:var(--display);font-weight:600;margin:0 3px}
+.fr b{font-weight:600;border-bottom:3px solid currentColor;padding:0 5px 3px}
+.fr i{font-style:normal;padding-top:3px}
+.mx{display:inline-flex;align-items:center;gap:4px;font-family:var(--display);font-weight:600}
+.mx .wh{font-size:1.5em}
+.big-fr{font-size:1.5rem}
+
+/* home */
+.hero{display:flex;align-items:center;gap:14px}
+.hero .face{font-size:3.2rem;line-height:1;filter:drop-shadow(0 4px 0 var(--shadow))}
+.shelf{display:flex;flex-wrap:wrap;gap:6px;min-height:44px;align-items:center;background:var(--surface2);border-radius:16px;padding:8px 12px}
+.shelf .st{font-size:1.7rem;line-height:1}
+.shelf .empty{color:var(--ink2);font-size:.95rem}
+.worlds{display:flex;flex-direction:column;gap:12px}
+.world{display:grid;grid-template-columns:62px 1fr;gap:12px;align-items:center;text-align:left;width:100%;background:var(--surface);border:2px solid var(--line);border-radius:22px;padding:14px;box-shadow:0 5px 0 var(--shadow);transition:transform .08s}
+.world:active{transform:translateY(3px);box-shadow:0 2px 0 var(--shadow)}
+.world .badge{width:62px;height:62px;border-radius:18px;display:grid;place-items:center;font-size:2rem;color:#fff}
+.world .wname{font-family:var(--display);font-weight:600;font-size:1.25rem}
+.world .wblurb{color:var(--ink2);font-size:.92rem}
+.world .lv{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
+.lvpill{font-size:.8rem;font-family:var(--display);background:var(--surface2);border-radius:999px;padding:2px 9px;letter-spacing:.02em}
+.lvpill .s{color:var(--lemon);text-shadow:0 1px 0 var(--shadow2)}
+.lvpill .o{color:var(--cut)}
+.tag{display:inline-block;background:var(--lemon);color:#4A3600;font-family:var(--display);font-size:.75rem;padding:2px 8px;border-radius:999px;margin-left:6px;vertical-align:middle}
+
+/* level picker */
+.levels{display:flex;flex-direction:column;gap:10px}
+.lvbtn{display:flex;justify-content:space-between;align-items:center;width:100%;text-align:left;background:var(--surface);border:2px solid var(--line);border-radius:18px;padding:14px 16px;box-shadow:0 5px 0 var(--shadow)}
+.lvbtn:active{transform:translateY(3px);box-shadow:0 2px 0 var(--shadow)}
+.lvbtn .n{font-family:var(--display);font-weight:600;font-size:1.15rem}
+.lvbtn .d{color:var(--ink2);font-size:.9rem}
+.stars{font-size:1.2rem;letter-spacing:2px}
+.stars .on{color:var(--lemon)}.stars .off{color:var(--cut)}
+
+/* play */
+.prog{display:flex;gap:6px;justify-content:center;padding-block:4px}
+.prog span{width:28px;height:10px;border-radius:999px;background:var(--line)}
+.prog span.ok{background:var(--good)}.prog span.miss{background:var(--peach)}.prog span.cur{background:var(--grape)}
+.qcard{background:var(--surface);border:2px solid var(--line);border-radius:22px;padding:18px;box-shadow:0 6px 0 var(--shadow);display:flex;flex-direction:column;gap:14px;align-items:center;text-align:center}
+.prompt{font-family:var(--display);font-weight:500;font-size:1.3rem;line-height:1.3}
+.prompt .fr{font-size:1.1em}
+.visual{width:100%;display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:10px}
+.visual svg{max-width:100%;height:auto}
+.legend{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;font-size:.95rem}
+.legend span::before{content:"";display:inline-block;width:14px;height:14px;border-radius:4px;margin-right:6px;vertical-align:-2px;background:var(--c)}
+.part{cursor:pointer;transition:fill .12s}
+.part.on{fill:var(--berry)!important}
+.sublabel{color:var(--ink2);font-size:.95rem}
+
+/* answer area */
+.answer{display:flex;flex-direction:column;gap:12px;align-items:center}
+.slots{display:flex;align-items:center;gap:10px;font-family:var(--display);font-weight:600;font-size:1.8rem}
+.slot{min-width:64px;height:60px;border-radius:14px;background:var(--surface2);border:3px solid var(--line);display:grid;place-items:center;font-variant-numeric:tabular-nums;color:var(--ink)}
+.slot.active{border-color:var(--grape);box-shadow:0 0 0 4px color-mix(in srgb,var(--grape) 25%,transparent)}
+.slot.fixed{background:var(--surface);border-style:dashed;color:var(--ink2)}
+.fracbox{display:inline-flex;flex-direction:column;align-items:center;gap:6px}
+.fracbox .bar{width:70px;height:4px;background:var(--ink);border-radius:2px}
+.keypad{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;width:100%;max-width:340px}
+.key{font-family:var(--display);font-weight:600;font-size:1.4rem;height:54px;border-radius:14px;background:var(--surface);border:2px solid var(--line);box-shadow:0 4px 0 var(--shadow)}
+.key:active{transform:translateY(3px);box-shadow:0 1px 0 var(--shadow)}
+.key.wide{grid-column:span 2}
+.key.util{background:var(--surface2);font-size:1.1rem}
+.choices{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%}
+.choice{background:var(--surface);border:3px solid var(--line);border-radius:18px;padding:14px 10px;box-shadow:0 4px 0 var(--shadow);font-family:var(--display);font-weight:600;font-size:1.4rem;display:flex;flex-direction:column;align-items:center;gap:8px;min-height:64px}
+.choice.sel{border-color:var(--grape);background:color-mix(in srgb,var(--grape) 12%,var(--surface))}
+.choice svg{width:120px;height:auto}
+.choice .ord{position:absolute;top:-10px;left:-10px;width:30px;height:30px;border-radius:50%;background:var(--grape);color:#fff;display:grid;place-items:center;font-size:1rem}
+.choice{position:relative}
+.pickrow{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%}
+.pickrow .choice{min-height:120px}
+.vs{text-align:center;font-family:var(--display);color:var(--ink2);grid-column:1/-1;margin:-4px 0}
+
+/* feedback */
+.feedback{border-radius:18px;padding:14px 16px;display:flex;flex-direction:column;gap:10px;animation:pop .25s ease-out}
+.feedback.good{background:var(--good-bg);border:2px solid var(--good)}
+.feedback.bad{background:var(--bad-bg);border:2px solid var(--bad)}
+.feedback.hint{background:var(--hint-bg);border:2px solid var(--lemon)}
+.feedback .t{font-family:var(--display);font-weight:600;font-size:1.25rem}
+.feedback p{margin:0}
+.feedback .fr{font-size:1.05em}
+.actions{display:flex;gap:10px}
+.actions .btn{flex:1}
+@keyframes pop{from{transform:scale(.96);opacity:0}to{transform:scale(1);opacity:1}}
+.wiggle{animation:wig .4s ease-in-out}
+@keyframes wig{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.bounce{animation:bnc .5s ease-out}
+@keyframes bnc{0%{transform:scale(1)}40%{transform:scale(1.15)}100%{transform:scale(1)}}
+
+/* complete */
+.done{text-align:center;display:flex;flex-direction:column;gap:14px;align-items:center}
+.done .bigstars{font-size:3rem;letter-spacing:6px}
+.done .bigstars .on{color:var(--lemon);text-shadow:0 3px 0 var(--shadow2)}
+.done .bigstars .off{color:var(--cut)}
+.coinpop{font-family:var(--display);font-size:1.5rem;font-weight:600}
+
+/* shop */
+.shop{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:10px}
+.item{display:flex;flex-direction:column;align-items:center;gap:4px;background:var(--surface);border:2px solid var(--line);border-radius:18px;padding:12px 6px;box-shadow:0 4px 0 var(--shadow)}
+.item .em{font-size:2.2rem;line-height:1}
+.item .nm{font-family:var(--display);font-size:.9rem}
+.item .cost{font-size:.85rem;color:var(--ink2);font-variant-numeric:tabular-nums}
+.item.owned{border-color:var(--mint);background:color-mix(in srgb,var(--mint) 12%,var(--surface))}
+.item.locked .em{filter:grayscale(1);opacity:.45}
+.item[disabled]{opacity:.6}
+
+/* grown-ups */
+table{width:100%;border-collapse:collapse;font-size:.95rem}
+th,td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
+th{font-family:var(--display);font-weight:600;color:var(--ink2);font-size:.85rem;text-transform:uppercase;letter-spacing:.04em}
+td.num,th.num{text-align:right}
+.meter{height:8px;background:var(--line);border-radius:999px;overflow:hidden}
+.meter i{display:block;height:100%;background:var(--mint);border-radius:999px}
+.meter i.low{background:var(--bad)}.meter i.mid{background:var(--lemon)}
+.tips{display:flex;flex-direction:column;gap:10px}
+.tip{background:var(--surface2);border-radius:14px;padding:10px 12px;font-size:.95rem}
+.tip b{font-family:var(--display)}
+input.txt{font:inherit;font-family:var(--display);font-size:1.3rem;padding:12px 16px;border-radius:16px;border:3px solid var(--line);background:var(--surface);color:var(--ink);width:100%}
+.center{text-align:center}
+.vstack{display:flex;flex-direction:column;gap:12px}
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:50;width:100%;height:100%}
+.tray{display:grid;gap:6px;justify-content:center}
+.tray .r{display:flex;gap:6px;padding:4px 6px;border-radius:12px;border:3px solid transparent}
+.tray .r.hl{border-color:var(--berry);background:color-mix(in srgb,var(--berry) 12%,transparent)}
+.tray .c{font-size:1.5rem;line-height:1}
+.ribbon{font-family:var(--display);font-size:.8rem;letter-spacing:.06em;text-transform:uppercase;color:var(--ink2)}
+.streakbox{display:flex;gap:10px;align-items:center;background:var(--surface2);border-radius:16px;padding:10px 14px}
+.streakbox .f{font-size:1.8rem}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+@media (max-width:380px){.prompt{font-size:1.15rem}.slots{font-size:1.5rem}.slot{min-width:54px;height:52px}}
+</style>
+
+<div id="app">
+  <header class="top">
+    <div class="brand"><span class="mascot" id="mascot">🐰</span><span id="brandName">Fraction Bakery</span></div>
+    <div class="pills"><span class="pill" title="Coins">🪙 <span id="coinCount">0</span></span><span class="pill" title="Day streak">🔥 <span id="streakCount">0</span></span></div>
+  </header>
+  <main id="screen" class="vstack"></main>
+</div>
+<canvas id="confetti"></canvas>
+
+<script>
+/* ---------- helpers ---------- */
+const $ = (s, r=document) => r.querySelector(s);
+const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
+const gcd = (a,b) => b ? gcd(b, a%b) : a;
+const ri = (a,b) => a + Math.floor(Math.random()*(b-a+1));
+const pick = a => a[Math.floor(Math.random()*a.length)];
+const shuffle = a => { a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; };
+const simp = (n,d) => { const k=gcd(n,d)||1; return [n/k, d/k]; };
+const F = (n,d) => `<span class="fr"><b>${n}</b><i>${d}</i></span>`;
+const M = (w,n,d) => w ? `<span class="mx"><span class="wh">${w}</span>${F(n,d)}</span>` : F(n,d);
+const KIDS = ['Mia','Ava','Zoe','Lily','Ruby','Nora','Ellie','Harper','Sadie','Ivy'];
+const kid = () => (S.name && Math.random()<.3) ? S.name : pick(KIDS);
+const CHEERS = ['Yum! Nailed it!','Sweet!','You got it!','Perfect slice!','Fantastic!','Whoa, baker skills!','That is exactly right!','Sprinkles for you!'];
+const NUDGES = ['Not yet. Have a look at this:','Almost! Here is a clue:','Hmm, try once more. A hint:','Close! Think about this:'];
+
+/* ---------- state ---------- */
+const KEY = 'fractionBakery.v1';
+const DEFAULT = { name:'', coins:0, stars:{}, stats:{}, stickers:[], streak:0, lastDay:'', sound:true, missed:[], played:0 };
+let S = load();
+function load(){ try{ const raw = localStorage.getItem(KEY); if(raw) return Object.assign({}, DEFAULT, JSON.parse(raw)); }catch(e){} return Object.assign({}, DEFAULT); }
+function save(){ S.savedAt=Date.now(); try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} refreshPills(); queueSync(); }
+
+/* ---------- home base: a Google Sheet behind an Apps Script web app (no sign-in needed to play) ---------- */
+const REPORT_URL = ''; // paste the deployed Apps Script web app URL here, or set it in the Grown-up corner
+function reportUrl(){ try{ return localStorage.getItem('fractionBakery.reportUrl') || REPORT_URL; }catch(e){ return REPORT_URL; } }
+async function postHome(payload){ const u=reportUrl(); if(!u) return false;
+  try{ const r=await fetch(u,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload)}); return r.ok; }catch(e){ return false; } }
+async function getHome(params){ const u=reportUrl(); if(!u) return null;
+  try{ const r=await fetch(u+(u.includes('?')?'&':'?')+new URLSearchParams(params).toString(),{cache:'no-store'}); if(!r.ok) return null; return await r.json(); }catch(e){ return null; } }
+let syncTimer=null;
+function queueSync(){ if(!reportUrl()||!S.name) return; clearTimeout(syncTimer); syncTimer=setTimeout(()=>postHome({type:'progress', name:S.name, savedAt:S.savedAt, state:S}), 2500); }
+async function pullProgress(){ if(!reportUrl()||!S.name) return false;
+  const j=await getHome({action:'progress', name:S.name}); if(!j||!j.state) return false;
+  if((j.state.savedAt||0) > (S.savedAt||0)){ S=Object.assign({}, DEFAULT, j.state); try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} refreshPills(); return true; } return false; }
+function refreshPills(){ $('#coinCount').textContent = S.coins; $('#streakCount').textContent = S.streak; }
+function today(){ const d=new Date(); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); }
+function touchStreak(){
+  const t = today(); if (S.lastDay === t) return;
+  const y = new Date(); y.setDate(y.getDate()-1); const yd = y.getFullYear()+'-'+(y.getMonth()+1)+'-'+y.getDate();
+  S.streak = (S.lastDay === yd) ? S.streak+1 : 1; S.lastDay = t; save();
+}
+
+/* ---------- shared database (parent reports) ---------- */
+let DB = null, DBREADY = false;
+(async()=>{ try{ DB = window.claude && window.claude.use ? await window.claude.use('db') : null; }catch(e){ DB=null; } DBREADY=true; })();
+async function logSession(rec){ if(!DB) return false; try{ await DB.collection('sessions').add(rec); return true; }catch(e){ return false; } }
+
+/* ---------- sound ---------- */
+let AC = null;
+function tone(f, t=0.12, type='sine', when=0, vol=.18){
+  if(!S.sound) return;
+  try{ AC = AC || new (window.AudioContext||window.webkitAudioContext)(); const o=AC.createOscillator(), g=AC.createGain();
+    o.type=type; o.frequency.value=f; g.gain.value=vol; o.connect(g); g.connect(AC.destination);
+    const s=AC.currentTime+when; o.start(s); g.gain.setValueAtTime(vol,s); g.gain.exponentialRampToValueAtTime(0.001,s+t); o.stop(s+t+.02);
+  }catch(e){}
+}
+const sfx = {
+  tap(){ tone(520,.06,'triangle',0,.08); },
+  good(){ tone(660,.12,'triangle'); tone(880,.16,'triangle',.11); },
+  bad(){ tone(220,.18,'sine',0,.12); },
+  win(){ [523,659,784,1047].forEach((f,i)=>tone(f,.2,'triangle',i*.12)); },
+  coin(){ tone(1200,.08,'square',0,.06); tone(1600,.1,'square',.07,.06); }
+};
+
+/* ---------- confetti ---------- */
+const cv = $('#confetti'), cx = cv.getContext('2d'); let parts=[], raf=null;
+const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+function sizeCanvas(){ cv.width = innerWidth*devicePixelRatio; cv.height = innerHeight*devicePixelRatio; cx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0); }
+addEventListener('resize', sizeCanvas); sizeCanvas();
+function burst(n=60, y=innerHeight*.45){
+  if(reduced) return;
+  const cols=['#FF5C9D','#7B61FF','#2FCB9A','#FFD24D','#4CC3F0','#FF9F6E'];
+  for(let i=0;i<n;i++) parts.push({x:innerWidth/2+ri(-40,40), y, vx:ri(-9,9), vy:ri(-14,-4), g:.35, r:ri(4,8), c:pick(cols), a:1, rot:Math.random()*6, vr:(Math.random()-.5)*.3});
+  if(!raf) raf=requestAnimationFrame(tick);
+}
+function tick(){
+  cx.clearRect(0,0,innerWidth,innerHeight);
+  parts.forEach(p=>{ p.vy+=p.g; p.x+=p.vx; p.y+=p.vy; p.vx*=.99; p.a-=.012; p.rot+=p.vr;
+    cx.save(); cx.globalAlpha=Math.max(0,p.a); cx.translate(p.x,p.y); cx.rotate(p.rot); cx.fillStyle=p.c; cx.fillRect(-p.r/2,-p.r/2,p.r,p.r*1.4); cx.restore(); });
+  parts = parts.filter(p=>p.a>0 && p.y<innerHeight+20);
+  raf = parts.length ? requestAnimationFrame(tick) : (cx.clearRect(0,0,innerWidth,innerHeight), null);
+}
+
+/* ---------- visuals (SVG) ---------- */
+const PINK='var(--berry)', PURPLE='var(--grape)', EMPTY='var(--surface2)', CUT='var(--cut)';
+function pie(n, k, k2=0, o={}){
+  const size=o.size||140, c=size/2, r=c-4; let s='';
+  for(let i=0;i<n;i++){
+    const a0=-Math.PI/2+i*2*Math.PI/n, a1=-Math.PI/2+(i+1)*2*Math.PI/n;
+    const x0=c+r*Math.cos(a0), y0=c+r*Math.sin(a0), x1=c+r*Math.cos(a1), y1=c+r*Math.sin(a1);
+    const fill = i<k ? PINK : (i<k+k2 ? PURPLE : EMPTY);
+    const d = n===1 ? `M ${c} ${c} m -${r} 0 a ${r} ${r} 0 1 0 ${2*r} 0 a ${r} ${r} 0 1 0 -${2*r} 0` : `M ${c} ${c} L ${x0} ${y0} A ${r} ${r} 0 ${(2*Math.PI/n>Math.PI)?1:0} 1 ${x1} ${y1} Z`;
+    s += `<path class="${o.interactive?'part':''}" data-i="${i}" d="${d}" fill="${fill}" stroke="${CUT}" stroke-width="3" stroke-linejoin="round"/>`;
+  }
+  return `<svg viewBox="0 0 ${size} ${size}" width="${size}" height="${size}" role="img" aria-label="cake cut into ${n} pieces, ${k} shaded">${s}</svg>`;
+}
+function bar(n, k, k2=0, o={}){
+  const W=o.width||300, H=o.height||46, w=W/n; let s='';
+  for(let i=0;i<n;i++){ const fill = i<k ? PINK : (i<k+k2 ? PURPLE : EMPTY);
+    s += `<rect class="${o.interactive?'part':''}" data-i="${i}" x="${(i*w)+2}" y="2" width="${w-4>0?w-4:w}" height="${H-4}" rx="7" fill="${fill}" stroke="${CUT}" stroke-width="3"/>`; }
+  return `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" style="width:100%;max-width:${W}px" role="img" aria-label="bar cut into ${n} pieces, ${k} shaded">${s}</svg>`;
+}
+function cakes(whole, n, k, size=92){
+  let s=''; for(let i=0;i<whole;i++) s+=pie(n,n,0,{size}); if(k>0) s+=pie(n,k,0,{size}); return s;
+}
+function tray(total, groups, hl=0){
+  const cols = total/groups; let s='';
+  for(let g=0; g<groups; g++){ s+=`<div class="r ${g<hl?'hl':''}">`; for(let c=0;c<cols;c++) s+=`<span class="c">🍪</span>`; s+='</div>'; }
+  return `<div class="tray">${s}</div>`;
+}
+const legend = items => `<div class="legend">${items.map(([c,t])=>`<span style="--c:${c}">${t}</span>`).join('')}</div>`;
+
+/* ---------- question generators ---------- */
+const NOUN = () => pick([['cake','pie'],['chocolate bar','bar']]);
+
+function qNameFraction(ease){
+  const n = ease ? ri(2,5) : ri(2,10), k = ri(1,n-1); const [noun,kind]=NOUN();
+  return { prompt:`What fraction of the ${noun} is pink?`, visual: kind==='pie'?pie(n,k):bar(n,k),
+    input:{type:'frac'}, answer:{type:'frac', n:k, d:n, mode:'equiv'},
+    hint:`Count <b>all</b> the pieces. That number goes on the <b>bottom</b>. Then count the <b>pink</b> pieces for the <b>top</b>.`,
+    explain:`The ${noun} is cut into <b>${n}</b> equal pieces, so the bottom number is ${n}. <b>${k}</b> pieces are pink, so the top number is ${k}. The fraction is ${F(k,n)}.` };
+}
+function qShade(ease){
+  const n = ease ? ri(2,6) : ri(3,10), k = ri(1,n-1); const [noun,kind]=NOUN();
+  return { prompt:`Tap to colour ${F(k,n)} of the ${noun}.`, visual: kind==='pie'?pie(n,0,0,{interactive:true}):bar(n,0,0,{interactive:true}),
+    input:{type:'shade'}, answer:{type:'count', k},
+    hint:`The <b>bottom</b> number (${n}) says the ${noun} has ${n} pieces. The <b>top</b> number (${k}) says how many to colour.`,
+    explain:`${F(k,n)} means ${k} out of ${n} pieces. Colour exactly <b>${k}</b> pieces and leave the rest.` };
+}
+function qWhichPicture(ease){
+  const n = ease ? ri(2,6) : ri(3,8), k = ri(1,n-1);
+  const opts=[{n,k,ok:true}]; const seen=new Set([`${k}/${n}`]);
+  while(opts.length<4){ const nn = Math.random()<.5? n : ri(2,8); const kk = ri(1,nn-1); const key=`${kk}/${nn}`; if(seen.has(key) || kk*n===k*nn) continue; seen.add(key); opts.push({n:nn,k:kk}); }
+  const ch = shuffle(opts);
+  return { prompt:`Which picture shows ${F(k,n)}?`, visual:'', input:{type:'mc', choices: ch.map(o=>bar(o.n,o.k,0,{width:200,height:40}))}, answer:{type:'index', i: ch.findIndex(o=>o.ok)},
+    hint:`Look for a bar with <b>${n}</b> pieces first. Then check that <b>${k}</b> are pink.`,
+    explain:`${F(k,n)} is ${k} pink pieces out of ${n} equal pieces. Only one bar has ${n} pieces with ${k} coloured.` };
+}
+function qEquivFill(ease){
+  const b = ease ? pick([2,3,4]) : pick([2,3,4,5,6]); const m = ease ? ri(2,3) : ri(2,4);
+  const [sa,sb] = simp(ri(1,b-1),b); const D=sb*m, N=sa*m;
+  return { prompt:`Fill in the missing number.<br>${F(sa,sb)} = ${F('?',D)}`, visual: bar(sb,sa)+bar(D,N),
+    input:{type:'frac', den:D}, answer:{type:'frac', n:N, d:D, mode:'exact'},
+    hint:`Both bars have the <b>same amount</b> coloured. Count the pink pieces in the <b>bottom</b> bar.`,
+    explain:`Every piece of the top bar was cut into <b>${m}</b> smaller pieces. ${sa} × ${m} = <b>${N}</b> and ${sb} × ${m} = ${D}. So ${F(sa,sb)} = ${F(N,D)}.` };
+}
+function qEquivChoose(ease){
+  const b = ease ? pick([2,3,4]) : pick([2,3,4,5,6]); const [a,bb] = simp(ri(1,b-1), b); const m = ease?ri(2,3):ri(2,5);
+  const good={n:a*m,d:bb*m,ok:true}; const opts=[good]; const seen=new Set([`${good.n}/${good.d}`]);
+  const cands=[{n:a*m+1,d:bb*m},{n:a*m,d:bb*m+1},{n:a+m,d:bb+m},{n:a*m-1,d:bb*m},{n:a,d:bb*m},{n:a*(m+1),d:bb*m}];
+  for(const c of shuffle(cands)){ if(opts.length>=4) break; if(c.n<1||c.n>=c.d) continue; const key=`${c.n}/${c.d}`; if(seen.has(key)||c.n*bb===a*c.d) continue; seen.add(key); opts.push(c); }
+  while(opts.length<4){ const c={n:ri(1,9),d:ri(2,10)}; if(c.n>=c.d) continue; const key=`${c.n}/${c.d}`; if(seen.has(key)||c.n*bb===a*c.d) continue; seen.add(key); opts.push(c); }
+  const ch=shuffle(opts);
+  return { prompt:`Which fraction is the <b>same size</b> as ${F(a,bb)}?`, visual: bar(bb,a), input:{type:'mc', choices: ch.map(o=>F(o.n,o.d))}, answer:{type:'index', i: ch.findIndex(o=>o.ok)},
+    hint:`Multiply the <b>top and bottom</b> by the same number. Try × 2, × 3, × 4…`,
+    explain:`${a} × ${m} = ${a*m} and ${bb} × ${m} = ${bb*m}. So ${F(a,bb)} = ${F(a*m,bb*m)}. Same amount of cake, just cut into smaller pieces.` };
+}
+function qSimplest(ease){
+  const b = ease ? pick([2,3,4]) : pick([2,3,4,5]); const [a,bb]=simp(ri(1,b-1),b); const m = ease?2:ri(2,4); const N=a*m, D=bb*m;
+  return { prompt:`Write ${F(N,D)} in its <b>simplest form</b>.`, visual: bar(D,N)+bar(bb,a),
+    input:{type:'frac'}, answer:{type:'frac', n:a, d:bb, mode:'exact'},
+    hint:`Find a number that divides <b>both</b> ${N} and ${D}. Try 2, then 3, then 4. Divide the top and bottom by it.`,
+    explain:`Both ${N} and ${D} can be divided by <b>${m}</b>. ${N} ÷ ${m} = ${a} and ${D} ÷ ${m} = ${bb}. Simplest form is ${F(a,bb)}. Look: the two bars show the same amount.` };
+}
+function qCompare1(ease){
+  const sameDen = Math.random()<.5;
+  let L,R;
+  if(sameDen){ const n=ease?ri(3,6):ri(3,10); let k1=ri(1,n-1), k2=ri(1,n-1); while(k2===k1) k2=ri(1,n-1); L={n:k1,d:n}; R={n:k2,d:n}; }
+  else { const k=ease?1:ri(1,2); const lo=k+1, hi=ease?5:8; let d1=ri(lo,hi), d2=ri(lo,hi); while(d2===d1) d2=ri(lo,hi); L={n:k,d:d1}; R={n:k,d:d2}; }
+  const ans = L.n*R.d > R.n*L.d ? 'left' : 'right';
+  return { prompt:`Which fraction is <b>bigger</b>?`, visual:'', input:{type:'pick', left:L, right:R, allowEqual:false}, answer:{type:'side', s:ans},
+    hint: sameDen ? `The pieces are the <b>same size</b>. More pieces means more cake.` : `Same number of pieces, but which pieces are <b>bigger</b>? Fewer cuts means bigger pieces.`,
+    explain: sameDen ? `Both are cut into ${L.d} pieces. ${Math.max(L.n,R.n)} pieces is more than ${Math.min(L.n,R.n)} pieces, so ${ans==='left'?F(L.n,L.d):F(R.n,R.d)} is bigger.`
+                     : `When a cake is cut into fewer pieces, each piece is bigger. A ${Math.min(L.d,R.d)}-piece cake has bigger pieces than a ${Math.max(L.d,R.d)}-piece cake, so ${ans==='left'?F(L.n,L.d):F(R.n,R.d)} is bigger.` };
+}
+function qCompare2(ease){
+  const b = ease?pick([2,3,4]):pick([2,3,4,5,6]); const [a,bb]=simp(ri(1,b-1),b); const m=ease?2:ri(2,3); const D=bb*m; let c=ri(1,D-1);
+  if(Math.random()<.2) c=a*m;
+  const L={n:a,d:bb}, R={n:c,d:D}; const flip=Math.random()<.5; const left=flip?R:L, right=flip?L:R;
+  const ans = left.n*right.d===right.n*left.d ? 'equal' : (left.n*right.d>right.n*left.d?'left':'right');
+  return { prompt:`Which fraction is <b>bigger</b>?`, visual:'', input:{type:'pick', left, right, allowEqual:true}, answer:{type:'side', s:ans},
+    hint:`Make the pieces the same size. ${F(a,bb)} is the same as ${F('?',D)}. Then compare the top numbers.`,
+    explain:`${F(a,bb)} = ${F(a*m,D)}. Now both have ${D}-size pieces: ${a*m} pieces and ${c} pieces. ${ans==='equal'?'They are the same size!':'The one with more pieces is bigger: '+(ans==='left'?F(left.n,left.d):F(right.n,right.d))+'.'}` };
+}
+function qOrder(ease){
+  const base = ease?pick([4,6]):pick([6,8,10,12]); const dens=[base, ...shuffle([2,3,4,5,6].filter(d=>base%d===0&&d<base))].slice(0,2);
+  const fr=[]; const vals=new Set();
+  let guard=0;
+  while(fr.length<3 && guard++<200){ const d=pick([base,...dens]); const n=ri(1,d-1); const v=n/d; if([...vals].some(x=>Math.abs(x-v)<1e-9)) continue; vals.add(v); fr.push({n,d}); }
+  while(fr.length<3){ const d=base; const n=ri(1,d-1); const v=n/d; if([...vals].some(x=>Math.abs(x-v)<1e-9)) continue; vals.add(v); fr.push({n,d}); }
+  const order = fr.map((f,i)=>({i,v:f.n/f.d})).sort((x,y)=>x.v-y.v).map(o=>o.i);
+  const sorted = order.map(i=>F(fr[i].n,fr[i].d)).join(' , ');
+  return { prompt:`Tap the fractions in order from <b>smallest</b> to <b>biggest</b>.`, visual:'', input:{type:'order', items: fr.map(f=>`${F(f.n,f.d)}${bar(f.d,f.n,0,{width:200,height:34})}`)}, answer:{type:'order', o:order},
+    hint:`Look at the bars. The <b>shortest</b> pink part is the smallest fraction. Tap that one first.`,
+    explain:`From smallest to biggest: ${sorted}. The pink bars get longer as you go.` };
+}
+function qAddLike(ease){
+  const n=ease?ri(3,6):ri(4,10); const a=ri(1,n-2); const b=ri(1,n-1-a);
+  return { prompt:`${F(a,n)} + ${F(b,n)} = ?`, visual: bar(n,a,b)+legend([[PINK,F(a,n)],[PURPLE,F(b,n)]]),
+    input:{type:'frac'}, answer:{type:'frac', n:a+b, d:n, mode:'equiv'},
+    hint:`The pieces are the <b>same size</b> (${n}ths). Just add the <b>top</b> numbers. The bottom stays ${n}.`,
+    explain:`${a} pink pieces + ${b} purple pieces = <b>${a+b}</b> pieces. Each piece is a ${n}th, so the answer is ${F(a+b,n)}${simp(a+b,n)[1]!==n?` (which is the same as ${F(...simp(a+b,n))})`:''}.` };
+}
+function qAddRelated(ease){
+  const b=ease?pick([2,3,4]):pick([2,3,4,5,6]); const [a,bb]=simp(ri(1,b-1),b); const m=ease?2:ri(2,3); const D=bb*m; const room=D-a*m; if(room<1) return qAddRelated(ease);
+  const c=ri(1,room); const N=a*m+c; const flip=Math.random()<.4;
+  const first = flip?F(c,D):F(a,bb), second = flip?F(a,bb):F(c,D);
+  return { prompt:`${first} + ${second} = ?`, visual: bar(bb,a)+bar(D,0,c)+legend([[PINK,F(a,bb)],[PURPLE,F(c,D)]]),
+    input:{type:'frac'}, answer:{type:'frac', n:N, d:D, mode:'equiv'},
+    hint:`The pieces are <b>different sizes</b>. Cut ${F(a,bb)} into ${D}ths: ${F(a,bb)} = ${F('?',D)}. Then add the tops.`,
+    explain:`${F(a,bb)} = ${F(a*m,D)} (multiply top and bottom by ${m}). Now ${F(a*m,D)} + ${F(c,D)} = ${F(N,D)}${simp(N,D)[1]!==D?` = ${F(...simp(N,D))}`:''}.` };
+}
+function qAddOver(ease){
+  const b=ease?pick([2,4]):pick([2,3,4,5]); const [a,bb]=simp(ri(1,b-1),b); const m=ease?2:ri(2,3); const D=bb*m; const c=ri(D-a*m+1, D-1); if(c<1||c>=D) return qAddOver(ease);
+  const N=a*m+c; const W=Math.floor(N/D), R=N%D;
+  return { prompt:`${F(a,bb)} + ${F(c,D)} = ?<br><span class="sublabel">Give a mixed number or a fraction</span>`, visual: bar(bb,a)+bar(D,0,c)+legend([[PINK,F(a,bb)],[PURPLE,F(c,D)]]),
+    input:{type:'frac', whole:true}, answer:{type:'frac', n:N, d:D, mode:'equiv'},
+    hint:`First make the pieces the same size: ${F(a,bb)} = ${F(a*m,D)}. Add the tops. If the top is bigger than ${D}, you have more than one whole!`,
+    explain:`${F(a,bb)} = ${F(a*m,D)}. ${a*m} + ${c} = ${N}, so the total is ${F(N,D)}. ${D} ${D}ths make one whole, so ${F(N,D)} = ${M(W,R,D)}${R===0?'':''}.` };
+}
+function qSubLike(ease){
+  const n=ease?ri(3,6):ri(4,10); const a=ri(2,n-1); const b=ri(1,a-1);
+  return { prompt:`${F(a,n)} − ${F(b,n)} = ?`, visual: bar(n,a-b,b)+legend([[PINK,'what is left'],[PURPLE,`${F(b,n)} taken away`]]),
+    input:{type:'frac'}, answer:{type:'frac', n:a-b, d:n, mode:'equiv'},
+    hint:`Same size pieces, so just take away the <b>top</b> numbers: ${a} − ${b}. The bottom stays ${n}.`,
+    explain:`Start with ${a} pieces. Take away ${b}. ${a} − ${b} = <b>${a-b}</b> pieces left, so ${F(a-b,n)}${simp(a-b,n)[1]!==n?` = ${F(...simp(a-b,n))}`:''}.` };
+}
+function qSubRelated(ease){
+  const b=ease?pick([2,3,4]):pick([2,3,4,5,6]); const [a,bb]=simp(ri(1,b-1),b); const m=ease?2:ri(2,3); const D=bb*m; const A=a*m;
+  const bigFirst = Math.random()<.6;
+  let c; if(bigFirst){ if(A<2) return qSubRelated(ease); c=ri(1,A-1); } else { if(A>=D-1) return qSubRelated(ease); c=ri(A+1,D-1); }
+  const N = bigFirst ? A-c : c-A;
+  const prompt = bigFirst ? `${F(a,bb)} − ${F(c,D)} = ?` : `${F(c,D)} − ${F(a,bb)} = ?`;
+  return { prompt, visual: bar(bb,a)+bar(D,c), input:{type:'frac'}, answer:{type:'frac', n:N, d:D, mode:'equiv'},
+    hint:`Different size pieces. Change ${F(a,bb)} into ${D}ths first: ${F(a,bb)} = ${F('?',D)}. Then take away the tops.`,
+    explain:`${F(a,bb)} = ${F(A,D)}. ${bigFirst?`${A} − ${c}`:`${c} − ${A}`} = <b>${N}</b>, so the answer is ${F(N,D)}${simp(N,D)[1]!==D?` = ${F(...simp(N,D))}`:''}.` };
+}
+function qSubFromWhole(ease){
+  const n=ease?ri(2,6):ri(3,10); const k=ri(1,n-1); const W = ease?1:pick([1,1,2]);
+  const N=W*n-k; const RW=Math.floor(N/n), RR=N%n;
+  return { prompt:`${W} − ${F(k,n)} = ?`, visual: cakes(W-1,n,n-k)+legend([[PINK,'what is left'],[EMPTY,`${F(k,n)} eaten`]]),
+    input:{type:'frac', whole:W>1}, answer:{type:'frac', n:N, d:n, mode:'equiv'},
+    hint:`One whole cake is ${F(n,n)}. ${W>1?`${W} cakes is ${F(W*n,n)}. `:''}Take away ${k} pieces from the top.`,
+    explain:`${W} whole = ${F(W*n,n)}. ${W*n} − ${k} = <b>${N}</b>, so ${F(N,n)}${W>1?` = ${M(RW,RR,n)}`:''}.` };
+}
+function qMixedName(ease){
+  const W=ease?ri(1,2):ri(1,3); const n=ease?pick([2,3,4]):ri(2,8); const k=ri(1,n-1);
+  return { prompt:`How many cakes are there? Write a <b>mixed number</b>.`, visual: cakes(W,n,k),
+    input:{type:'frac', whole:true}, answer:{type:'frac', n:W*n+k, d:n, mode:'mixed', w:W, pn:k},
+    hint:`Count the <b>whole</b> cakes first. That is the big number. Then write the leftover piece as a fraction.`,
+    explain:`There are <b>${W}</b> whole cakes and <b>${k}</b> pieces of a cake cut into ${n}. That is ${M(W,k,n)}.` };
+}
+function qMixedToImproper(ease){
+  const W=ease?ri(1,2):ri(1,4); const n=ease?pick([2,3,4]):ri(2,8); const k=ri(1,n-1); const N=W*n+k;
+  return { prompt:`${M(W,k,n)} = ${F('?',n)}`, visual: cakes(W,n,k,80), input:{type:'frac', den:n}, answer:{type:'frac', n:N, d:n, mode:'exact'},
+    hint:`Each whole cake has <b>${n}</b> pieces. ${W} cakes = ${W} × ${n} pieces. Then add the ${k} extra pieces.`,
+    explain:`${W} × ${n} = ${W*n} pieces in the whole cakes, plus ${k} more = <b>${N}</b> pieces. So ${M(W,k,n)} = ${F(N,n)}.` };
+}
+function qImproperToMixed(ease){
+  const n=ease?pick([2,3,4]):ri(2,8); const W=ease?ri(1,2):ri(1,3); const k=ri(1,n-1); const N=W*n+k;
+  return { prompt:`${F(N,n)} = ? <span class="sublabel">(mixed number)</span>`, visual: cakes(W,n,k,80),
+    input:{type:'frac', whole:true, den:n}, answer:{type:'frac', n:N, d:n, mode:'mixed', w:W, pn:k},
+    hint:`<b>${n}</b> pieces fill one whole cake. How many whole cakes can you fill with ${N} pieces? What is left over?`,
+    explain:`${N} ÷ ${n} = ${W} whole cakes with ${k} pieces left over. So ${F(N,n)} = ${M(W,k,n)}.` };
+}
+function qSetUnit(ease){
+  const g=ease?pick([2,3,4]):pick([2,3,4,5,6]); const s=ease?ri(2,4):ri(2,6); const T=g*s;
+  return { prompt:`What is ${F(1,g)} of ${T} cookies?`, visual: tray(T,g), input:{type:'num'}, answer:{type:'num', v:s},
+    hint:`Split the ${T} cookies into <b>${g} equal rows</b>. One row is ${F(1,g)}. Count the cookies in one row.`,
+    explain:`${T} cookies in ${g} equal groups is ${T} ÷ ${g} = <b>${s}</b> in each group. So ${F(1,g)} of ${T} is ${s}.`, hintVisual: tray(T,g,1) };
+}
+function qSetPart(ease){
+  const g=ease?pick([2,3,4]):pick([3,4,5,6]); const s=ease?ri(2,4):ri(2,6); const T=g*s; const kk = g>2 ? ri(2,g-1) : 1;
+  return { prompt:`What is ${F(kk,g)} of ${T} cookies?`, visual: tray(T,g), input:{type:'num'}, answer:{type:'num', v:kk*s},
+    hint:`Make <b>${g} equal rows</b>. One row is ${F(1,g)}, which is ${T} ÷ ${g} = ${s}. You need <b>${kk}</b> rows.`,
+    explain:`${T} ÷ ${g} = ${s} cookies in each row. ${kk} rows is ${kk} × ${s} = <b>${kk*s}</b>. So ${F(kk,g)} of ${T} is ${kk*s}.`, hintVisual: tray(T,g,kk) };
+}
+function qSetBig(ease){
+  const g=ease?pick([3,4,5]):pick([4,5,6,8]); const s=ease?ri(3,6):ri(4,8); const T=g*s; const kk=ri(1,g-1);
+  return { prompt:`Find ${F(kk,g)} of ${T}.`, visual: tray(T,g), input:{type:'num'}, answer:{type:'num', v:kk*s},
+    hint:`First find ${F(1,g)} of ${T}: that is ${T} ÷ ${g}. Then multiply by ${kk}.`,
+    explain:`${T} ÷ ${g} = ${s}. Then ${kk} × ${s} = <b>${kk*s}</b>.`, hintVisual: tray(T,g,kk) };
+}
+function qStory1(ease){
+  const n=ease?ri(4,6):ri(4,10); const A=kid(); let B=kid(); while(B===A) B=kid(); const food=pick(['pizza','cake','pie','chocolate bar']);
+  if(Math.random()<.5){ const a=ri(1,n-2), b=ri(1,n-1-a);
+    return { prompt:`${A} ate ${F(a,n)} of a ${food}. ${B} ate ${F(b,n)} of the same ${food}. How much did they eat <b>together</b>?`,
+      visual: bar(n,a,b)+legend([[PINK,`${A} ${F(a,n)}`],[PURPLE,`${B} ${F(b,n)}`]]), input:{type:'frac'}, answer:{type:'frac', n:a+b, d:n, mode:'equiv'},
+      hint:`"Together" means <b>add</b>. The pieces are the same size, so add the tops: ${a} + ${b}.`,
+      explain:`${a} pieces + ${b} pieces = <b>${a+b}</b> pieces of ${n}. They ate ${F(a+b,n)} of the ${food}.` };
+  } else { const a=ri(2,n-1), b=ri(1,a-1);
+    return { prompt:`${A} had ${F(a,n)} of a ${food}. She gave ${F(b,n)} to ${B}. How much does ${A} have <b>left</b>?`,
+      visual: bar(n,a-b,b)+legend([[PINK,`${A} keeps`],[PURPLE,`gave ${F(b,n)} to ${B}`]]), input:{type:'frac'}, answer:{type:'frac', n:a-b, d:n, mode:'equiv'},
+      hint:`"Left" means <b>take away</b>. Same size pieces, so ${a} − ${b} on top.`,
+      explain:`${a} pieces − ${b} pieces = <b>${a-b}</b> pieces of ${n}. ${A} has ${F(a-b,n)} left.` };
+  }
+}
+function qStory2(ease){
+  const g=ease?pick([2,3,4]):pick([3,4,5,6]); const s=ease?ri(2,5):ri(3,8); const T=g*s; const kk=ri(1,g-1); const A=kid();
+  const thing=pick(['cupcakes','cookies','muffins','donuts']); const topping=pick(['sprinkles','pink icing','chocolate chips','cherries']);
+  return { prompt:`${A} baked ${T} ${thing}. ${F(kk,g)} of them have ${topping}. How many ${thing} have ${topping}?`, visual: tray(T,g), input:{type:'num'}, answer:{type:'num', v:kk*s},
+    hint:`Draw ${g} equal groups. Each group is ${T} ÷ ${g} = ${s}. You need ${kk} groups.`,
+    explain:`${T} ÷ ${g} = ${s} in each group. ${kk} × ${s} = <b>${kk*s}</b> ${thing} have ${topping}.`, hintVisual: tray(T,g,kk) };
+}
+function qStory3(ease){
+  const A=kid();
+  if(Math.random()<.5){ const b=ease?2:pick([2,3,4]); const m=2; const D=b*m; const a=1; const c=ri(1,D-a*m-1>=1?D-a*m-1:1); const used=a*m+c; const left=D-used;
+    if(left<1) return qStory3(ease);
+    return { prompt:`${A} has 1 metre of ribbon. She uses ${F(a,b)} m for a bow and ${F(c,D)} m for a braid. How much ribbon is <b>left</b>?`,
+      visual: bar(D,a*m,c)+legend([[PINK,`bow ${F(a,b)}`],[PURPLE,`braid ${F(c,D)}`],[EMPTY,'left']]), input:{type:'frac'}, answer:{type:'frac', n:left, d:D, mode:'equiv'},
+      hint:`Two steps. First change ${F(a,b)} into ${D}ths and add the two pieces used. Then take that away from 1 whole (${F(D,D)}).`,
+      explain:`${F(a,b)} = ${F(a*m,D)}. Used: ${F(a*m,D)} + ${F(c,D)} = ${F(used,D)}. Left: ${F(D,D)} − ${F(used,D)} = ${F(left,D)}${simp(left,D)[1]!==D?` = ${F(...simp(left,D))}`:''}.` };
+  } else { const g=ease?pick([2,3,4]):pick([3,4,5,6]); const s=ri(2,6); const T=g*s; const kk=ri(1,g-1); const thing=pick(['cookies','cupcakes','sweets']);
+    return { prompt:`There are ${T} ${thing} on a tray. ${F(kk,g)} of them are chocolate. How many are <b>not</b> chocolate?`, visual: tray(T,g), input:{type:'num'}, answer:{type:'num', v:(g-kk)*s},
+      hint:`Two steps. ${F(kk,g)} are chocolate, so ${F(g-kk,g)} are not. Find ${F(g-kk,g)} of ${T}.`,
+      explain:`${T} ÷ ${g} = ${s} in each group. Not chocolate = ${g-kk} groups = ${g-kk} × ${s} = <b>${(g-kk)*s}</b>.`, hintVisual: tray(T,g,g-kk) };
+  }
+}
+const mix = (...fns) => ease => pick(fns)(ease);
+
+/* ---------- worlds ---------- */
+const WORLDS = [
+  { id:'slice', name:'Slice It', emoji:'🍰', color:'var(--berry)', blurb:'What a fraction means', tip:'Always say "out of": 3/4 is 3 pieces out of 4 equal pieces. Ask her to point at the bottom number and say how many pieces the whole was cut into.',
+    levels:[{name:'Warm-up',desc:'Name the pink part',gen:qNameFraction},{name:'Baker',desc:'Colour the fraction',gen:qShade},{name:'Boss',desc:'All mixed up',gen:mix(qNameFraction,qShade,qWhichPicture)}] },
+  { id:'twins', name:'Twins', emoji:'👯', color:'var(--grape)', blurb:'Equivalent fractions', tip:'Fold a strip of paper in half, then in half again. The same amount of paper is now 1/2 = 2/4. Equivalent means same size, different cuts.',
+    levels:[{name:'Warm-up',desc:'Fill in the missing top',gen:qEquivFill},{name:'Baker',desc:'Spot the twin',gen:qEquivChoose},{name:'Boss',desc:'Simplest form',gen:qSimplest}] },
+  { id:'bigger', name:'Bigger Bite', emoji:'🐻', color:'var(--peach)', blurb:'Compare and order', tip:'Two rules she can test with cake: same size pieces means more pieces wins; same number of pieces means fewer cuts wins (1/3 beats 1/5).',
+    levels:[{name:'Warm-up',desc:'Same bottom or same top',gen:qCompare1},{name:'Baker',desc:'Different size pieces',gen:qCompare2},{name:'Boss',desc:'Put three in order',gen:qOrder}] },
+  { id:'add', name:'Add Em Up', emoji:'🧁', color:'var(--mint)', blurb:'Adding fractions', tip:'Rule 1: you can only add pieces that are the same size. If the bottoms differ, cut the bigger pieces smaller first (1/2 becomes 2/4). This is the heart of Chapter 6.',
+    levels:[{name:'Warm-up',desc:'Same size pieces',gen:qAddLike},{name:'Baker',desc:'Cut first, then add',gen:qAddRelated},{name:'Boss',desc:'More than one whole',gen:qAddOver}] },
+  { id:'sub', name:'Take Away', emoji:'🍩', color:'var(--sky)', blurb:'Subtracting fractions', tip:'Same rule as adding: make the pieces the same size first. For 1 minus a fraction, rename the whole as a fraction (1 = 8/8).',
+    levels:[{name:'Warm-up',desc:'Same size pieces',gen:qSubLike},{name:'Baker',desc:'Cut first, then subtract',gen:qSubRelated},{name:'Boss',desc:'Take away from a whole',gen:qSubFromWhole}] },
+  { id:'whole', name:'Whole Cakes', emoji:'🎂', color:'var(--berry)', blurb:'Mixed numbers', tip:'A mixed number is whole cakes plus leftover slices. To turn 2 3/4 into quarters, count the slices: 2 cakes × 4 slices + 3 = 11 slices.',
+    levels:[{name:'Warm-up',desc:'Count whole cakes and slices',gen:qMixedName},{name:'Baker',desc:'Mixed to fraction',gen:qMixedToImproper},{name:'Boss',desc:'Fraction to mixed',gen:qImproperToMixed}] },
+  { id:'set', name:'Cookie Trays', emoji:'🍪', color:'var(--lemon)', blurb:'Fraction of a set', tip:'Singapore method: draw a bar, split it into the bottom-number of equal boxes, share the cookies out, then count the boxes you need. 3/4 of 12 means 4 boxes of 3, take 3 boxes.',
+    levels:[{name:'Warm-up',desc:'One group',gen:qSetUnit},{name:'Baker',desc:'Several groups',gen:qSetPart},{name:'Boss',desc:'Bigger trays',gen:qSetBig}] },
+  { id:'story', name:'Story Time', emoji:'📖', color:'var(--grape)', blurb:'Word problems', tip:'Read it twice. Ask: what is the whole? Then draw the bar model before touching numbers. "Together" means add, "left" means subtract, "of" means find a fraction of a set.',
+    levels:[{name:'Warm-up',desc:'One step',gen:qStory1},{name:'Baker',desc:'Trays and groups',gen:qStory2},{name:'Boss',desc:'Two steps',gen:qStory3}] },
+];
+const STICKERS = [
+  ['🧁','Cupcake',20],['🍓','Strawberry',25],['🍩','Donut',30],['🐱','Kitten',40],['🦋','Butterfly',45],['🌈','Rainbow',50],['🎀','Big Bow',55],['🐶','Puppy',60],
+  ['🌸','Blossom',65],['🍦','Ice Cream',70],['🧸','Teddy',80],['🐼','Panda',90],['🦊','Fox',100],['🦄','Unicorn',120],['👑','Crown',150],['🐉','Dragon',180],['🧜‍♀️','Mermaid',200],['🚀','Rocket',250]
+];
+const QS_PER_LEVEL = 6;
+
+/* ---------- answer inputs ---------- */
+let inputCtl = null;
+function makeInput(q, host){
+  const t=q.input.type;
+  if(t==='frac'||t==='num') return fracInput(q.input, host, t==='num');
+  if(t==='shade') return { read(){ return $$('#visual .part.on').length; }, ready(){ return true; } };
+  if(t==='mc') return mcInput(q.input, host);
+  if(t==='pick') return pickInput(q.input, host);
+  if(t==='order') return orderInput(q.input, host);
+}
+function fracInput(cfg, host, single){
+  const st={ w:'', n:'', d: cfg.den?String(cfg.den):'', active: single?'n':'n' };
+  function render(){
+    const slots = single ? `<div class="slot ${st.active==='n'?'active':''}" data-s="n">${st.n||'&nbsp;'}</div>`
+      : `${cfg.whole?`<div class="slot ${st.active==='w'?'active':''}" data-s="w">${st.w||'&nbsp;'}</div>`:''}
+         <div class="fracbox"><div class="slot ${st.active==='n'?'active':''}" data-s="n">${st.n||'&nbsp;'}</div><div class="bar"></div>
+         <div class="slot ${cfg.den?'fixed':''} ${st.active==='d'?'active':''}" data-s="d">${st.d||'&nbsp;'}</div></div>`;
+    host.innerHTML = `<div class="slots">${slots}</div>
+      <div class="keypad">${[1,2,3,4,5,6,7,8,9].map(k=>`<button class="key" data-k="${k}">${k}</button>`).join('')}<button class="key" data-k="0">0</button>
+      <button class="key util" data-k="del">⌫</button>${single?'':`<button class="key util wide" data-k="next">next ▸</button>`}</div>`;
+    $$('.slot', host).forEach(s=>{ if(s.classList.contains('fixed')) return; s.onclick=()=>{ st.active=s.dataset.s; render(); }; });
+    $$('.key', host).forEach(b=>b.onclick=()=>{ sfx.tap(); const k=b.dataset.k;
+      if(k==='del'){ st[st.active]=st[st.active].slice(0,-1); }
+      else if(k==='next'){ st.active = nextSlot(); }
+      else { if(st[st.active].length<2) st[st.active]+=k; if(st[st.active].length===2 && !single) st.active = nextSlot(); }
+      render(); updateCheck(); });
+  }
+  function nextSlot(){ const order=[cfg.whole?'w':null,'n',cfg.den?null:'d'].filter(Boolean); const i=order.indexOf(st.active); return order[(i+1)%order.length]; }
+  render();
+  return { read(){ return { w: parseInt(st.w||'0',10), n: parseInt(st.n||'',10), d: parseInt(st.d||'',10), hasWhole: st.w!=='' }; },
+    ready(){ return single ? st.n!=='' : (st.n!=='' && st.d!=='' && parseInt(st.d,10)>0); } };
+}
+function mcInput(cfg, host){
+  let sel=-1;
+  host.innerHTML = `<div class="choices">${cfg.choices.map((c,i)=>`<button class="choice" data-i="${i}">${c}</button>`).join('')}</div>`;
+  $$('.choice', host).forEach(b=>b.onclick=()=>{ sfx.tap(); sel=+b.dataset.i; $$('.choice',host).forEach(x=>x.classList.toggle('sel', +x.dataset.i===sel)); updateCheck(); });
+  return { read(){ return sel; }, ready(){ return sel>=0; } };
+}
+function pickInput(cfg, host){
+  let sel=null; const L=cfg.left, R=cfg.right;
+  const card = (f,side) => `<button class="choice" data-s="${side}"><span class="big-fr">${F(f.n,f.d)}</span>${bar(f.d,f.n,0,{width:200,height:36})}</button>`;
+  host.innerHTML = `<div class="pickrow">${card(L,'left')}${card(R,'right')}${cfg.allowEqual?`<button class="choice" data-s="equal" style="grid-column:1/-1;min-height:56px;font-size:1.1rem">They are the same size</button>`:''}</div>`;
+  $$('.choice', host).forEach(b=>b.onclick=()=>{ sfx.tap(); sel=b.dataset.s; $$('.choice',host).forEach(x=>x.classList.toggle('sel', x.dataset.s===sel)); updateCheck(); });
+  return { read(){ return sel; }, ready(){ return !!sel; } };
+}
+function orderInput(cfg, host){
+  let seq=[];
+  function render(){
+    host.innerHTML = `<div class="choices" style="grid-template-columns:1fr">${cfg.items.map((c,i)=>{ const p=seq.indexOf(i); return `<button class="choice ${p>=0?'sel':''}" data-i="${i}">${p>=0?`<span class="ord">${p+1}</span>`:''}${c}</button>`; }).join('')}</div>
+      <button class="btn ghost" id="orderReset">↺ start over</button>`;
+    $$('.choice', host).forEach(b=>b.onclick=()=>{ const i=+b.dataset.i; if(seq.includes(i)) return; sfx.tap(); seq.push(i); render(); updateCheck(); });
+    $('#orderReset', host).onclick=()=>{ seq=[]; render(); updateCheck(); };
+  }
+  render();
+  return { read(){ return seq; }, ready(){ return seq.length===cfg.items.length; } };
+}
+function checkAnswer(q, v){
+  const a=q.answer;
+  if(a.type==='count') return v===a.k;
+  if(a.type==='index') return v===a.i;
+  if(a.type==='side') return v===a.s;
+  if(a.type==='order') return JSON.stringify(v)===JSON.stringify(a.o);
+  if(a.type==='num') return v.n===a.v;
+  if(a.type==='frac'){
+    if(!(v.d>0) || isNaN(v.n)) return false;
+    const val = v.n + (v.hasWhole? v.w:0)*v.d;             // user's value as (val / v.d)
+    if(a.mode==='exact') return v.n===a.n && v.d===a.d && !(v.hasWhole && v.w>0);
+    if(a.mode==='mixed'){ return val*a.d===a.n*v.d && v.n<v.d && v.hasWhole && v.w===a.w; }
+    return val*a.d===a.n*v.d;                               // equivalent value accepted
+  }
+  return false;
+}
+
+/* ---------- screens ---------- */
+let session=null;
+const screen = $('#screen');
+function go(html){ screen.innerHTML = html; window.scrollTo({top:0}); }
+
+function renderName(){
+  go(`<section class="card vstack center">
+    <div class="hero" style="justify-content:center"><span class="face">🐰</span><div><h1>Fraction Bakery</h1><p class="muted" style="margin:4px 0 0">Bake, slice, and collect stickers!</p></div></div>
+    <p style="margin:0">Hi! I am <b>Sprinkles</b>. What should I call you, chef?</p>
+    <input class="txt" id="nameInput" maxlength="16" placeholder="Your name" autocomplete="off">
+    <button class="btn primary big" id="nameGo">Let's bake! 🧁</button>
+  </section>`);
+  const inp=$('#nameInput'); inp.focus();
+  const done=async()=>{ const v=inp.value.trim(); if(!v){ inp.classList.add('wiggle'); setTimeout(()=>inp.classList.remove('wiggle'),400); return; }
+    S.name=v; sfx.coin(); $('#nameGo').textContent='Finding your bakery…'; $('#nameGo').disabled=true;
+    if(reportUrl()){ const j=await getHome({action:'progress', name:v}); if(j&&j.state&&j.state.name===v){ S=Object.assign({}, DEFAULT, j.state); } }
+    save(); renderHome(); };
+  $('#nameGo').onclick=done; inp.onkeydown=e=>{ if(e.key==='Enter') done(); };
+}
+
+function starStr(n, size=3){ return `<span class="stars">${'<span class="on">★</span>'.repeat(n)}${'<span class="off">★</span>'.repeat(size-n)}</span>`; }
+function worldStars(wi){ return [0,1,2].reduce((t,li)=>t+(S.stars[`${wi}.${li}`]||0),0); }
+function suggestWorld(){
+  for(let i=0;i<WORLDS.length;i++){ if([0,1,2].some(li=>!(S.stars[`${i}.${li}`]))) return i; } return WORLDS.length-1;
+}
+function renderHome(){
+  touchStreakView();
+  const sug = suggestWorld();
+  const shelf = S.stickers.length ? S.stickers.map(i=>`<span class="st" title="${STICKERS[i][1]}">${STICKERS[i][0]}</span>`).join('') : `<span class="empty">Your sticker shelf is empty. Earn coins to fill it!</span>`;
+  go(`<section class="hero"><span class="face">🐰</span><div><h1>Hi ${esc(S.name)}!</h1><p class="muted" style="margin:2px 0 0">Pick a station and let's bake.</p></div></section>
+    <div class="shelf">${shelf}</div>
+    <div class="row"><button class="btn mint" id="shopBtn">🎀 Sticker shop</button><button class="btn" id="howBtn">💡 How to play</button></div>
+    <div class="worlds">${WORLDS.map((w,i)=>`<button class="world" data-w="${i}">
+        <span class="badge" style="background:${w.color}">${w.emoji}</span>
+        <span><span class="wname">${w.name}${i===sug?'<span class="tag">start here</span>':''}</span><br><span class="wblurb">${w.blurb}</span>
+        <span class="lv">${w.levels.map((l,li)=>{ const s=S.stars[`${i}.${li}`]||0; return `<span class="lvpill">${l.name} <span class="s">${'★'.repeat(s)}</span><span class="o">${'★'.repeat(3-s)}</span></span>`; }).join('')}</span></span>
+      </button>`).join('')}</div>
+    <div class="center" style="padding-top:8px"><button class="btn ghost" id="grownBtn">Grown-ups</button> <button class="btn ghost" id="soundBtn">${S.sound?'🔊 Sound on':'🔇 Sound off'}</button></div>`);
+  $$('.world').forEach(b=>b.onclick=()=>{ sfx.tap(); renderLevels(+b.dataset.w); });
+  $('#shopBtn').onclick=()=>{ sfx.tap(); renderShop(); };
+  $('#howBtn').onclick=()=>{ sfx.tap(); renderHow(); };
+  $('#grownBtn').onclick=renderGate;
+  $('#soundBtn').onclick=()=>{ S.sound=!S.sound; save(); renderHome(); };
+}
+function touchStreakView(){ refreshPills(); }
+const esc = s => String(s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+function renderLevels(wi){
+  const w=WORLDS[wi];
+  go(`<button class="btn ghost" id="back" style="align-self:flex-start">◀ Back</button>
+    <section class="hero"><span class="badge" style="background:${w.color};width:64px;height:64px;border-radius:20px;display:grid;place-items:center;font-size:2.2rem">${w.emoji}</span><div><h2>${w.name}</h2><p class="muted" style="margin:2px 0 0">${w.blurb}</p></div></section>
+    <div class="levels">${w.levels.map((l,li)=>`<button class="lvbtn" data-l="${li}"><span><span class="n">${l.name}</span><br><span class="d">${l.desc} · ${QS_PER_LEVEL} questions</span></span>${starStr(S.stars[`${wi}.${li}`]||0)}</button>`).join('')}</div>`);
+  $('#back').onclick=renderHome;
+  $$('.lvbtn').forEach(b=>b.onclick=()=>{ sfx.tap(); startLevel(wi,+b.dataset.l); });
+}
+
+function startLevel(wi, li){
+  const gen=WORLDS[wi].levels[li].gen;
+  session={ wi, li, qi:0, results:[], qs: Array.from({length:QS_PER_LEVEL},()=>gen(false)), wrongStreak:0, cur:{attempts:0, hint:false, shown:false}, coins:0, hints:0, shown:0, missed:[], started:Date.now() };
+  renderPlay();
+}
+function updateCheck(){ const b=$('#checkBtn'); if(b && inputCtl) b.disabled=!inputCtl.ready(); }
+function renderPlay(){
+  const q=session.qs[session.qi]; const wi=session.wi; const w=WORLDS[wi];
+  go(`<div style="display:flex;justify-content:space-between;align-items:center"><button class="btn ghost" id="quit">◀ Stations</button><span class="ribbon">${w.name} · ${w.levels[session.li].name}</span></div>
+    <div class="prog">${session.qs.map((_,i)=>`<span class="${i<session.qi?(session.results[i]?'ok':'miss'):(i===session.qi?'cur':'')}"></span>`).join('')}</div>
+    <section class="qcard"><div class="prompt">${q.prompt}</div><div class="visual" id="visual">${q.visual}</div></section>
+    <div class="answer" id="answer"></div>
+    <div id="fb"></div>
+    <div class="actions"><button class="btn" id="hintBtn">💡 Hint</button><button class="btn primary" id="checkBtn" disabled>Check ✓</button></div>`);
+  $('#quit').onclick=()=>{ session=null; renderLevels(wi); };
+  inputCtl = makeInput(q, $('#answer'));
+  if(q.input.type==='shade'){ $$('#visual .part').forEach(p=>p.onclick=()=>{ p.classList.toggle('on'); sfx.tap(); updateCheck(); }); $('#checkBtn').disabled=false; }
+  $('#checkBtn').onclick=onCheck;
+  $('#hintBtn').onclick=onHint;
+  updateCheck();
+}
+function onHint(){
+  const q=session.qs[session.qi]; const c=session.cur; sfx.tap();
+  if(!c.hint){ c.hint=true; showFb('hint', 'Hint', q.hint, q.hintVisual); $('#hintBtn').textContent='👀 Show me'; }
+  else { c.shown=true; showFb('hint', 'Here is how', q.explain, q.hintVisual); $('#hintBtn').disabled=true; swapActions(`<button class="btn grape" id="nextBtn">Got it, next ▶</button>`); $('#nextBtn').onclick=()=>finishQ(false); }
+}
+function showFb(kind, title, body, vis){
+  const fb=$('#fb'); fb.innerHTML=`<div class="feedback ${kind}"><div class="t">${title}</div><p>${body}</p>${vis?`<div class="visual">${vis}</div>`:''}</div>`;
+  if(vis && kind==='hint'){ $('#visual').innerHTML=vis; }
+}
+function swapActions(html){ $('.actions').innerHTML=html; }
+function onCheck(){
+  const q=session.qs[session.qi]; const c=session.cur; c.attempts++;
+  const ok=checkAnswer(q, inputCtl.read());
+  if(ok){ sfx.good(); burst(c.attempts===1&&!c.hint?70:30); const earned = c.attempts===1 ? (c.hint ? 5 : 10) : 3; session.coins+=earned;
+    showFb('good', pick(CHEERS), `<b>+${earned} coins</b> 🪙`); $('#mascot').classList.add('bounce'); setTimeout(()=>$('#mascot').classList.remove('bounce'),500);
+    swapActions(`<button class="btn primary" id="nextBtn">Next ▶</button>`); $('#nextBtn').onclick=()=>finishQ(c.attempts===1 && !c.hint);
+  } else {
+    sfx.bad(); $('.qcard').classList.add('wiggle'); setTimeout(()=>$('.qcard').classList.remove('wiggle'),400);
+    if(c.attempts===1){ c.hint=true; showFb('bad', pick(NUDGES), q.hint, q.hintVisual); $('#hintBtn').textContent='👀 Show me'; }
+    else { c.shown=true; showFb('bad', 'No worries! Here is how it works', q.explain, q.hintVisual); swapActions(`<button class="btn grape" id="nextBtn">Got it, next ▶</button>`); $('#nextBtn').onclick=()=>finishQ(false); }
+  }
+}
+function finishQ(firstTry){
+  const c=session.cur; const wi=session.wi; const q=session.qs[session.qi];
+  const st = S.stats[wi] = S.stats[wi] || {q:0, first:0, hints:0, shown:0};
+  st.q++; if(firstTry) st.first++; if(c.hint) st.hints++; if(c.shown) st.shown++;
+  if(c.hint) session.hints++;
+  if(c.shown){ session.shown++; const txt=q.prompt.replace(/<b>([^<]*)<\/b><i>([^<]*)<\/i>/g,'$1/$2').replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim(); session.missed.push(txt); S.missed.unshift({w:WORLDS[wi].name, p:txt, t:Date.now()}); S.missed=S.missed.slice(0,12); }
+  session.results.push(firstTry);
+  session.wrongStreak = firstTry ? 0 : session.wrongStreak+1;
+  if(session.wrongStreak>=2){ const gen=WORLDS[wi].levels[session.li].gen; for(let i=session.qi+1;i<session.qs.length;i++) session.qs[i]=gen(true); session.wrongStreak=0; }
+  session.cur={attempts:0, hint:false, shown:false}; session.qi++; save();
+  if(session.qi>=session.qs.length) renderDone(); else renderPlay();
+}
+function renderDone(){
+  const first=session.results.filter(Boolean).length; const stars = first>=5?3:(first>=3?2:1); const key=`${session.wi}.${session.li}`;
+  const prev=S.stars[key]||0; S.stars[key]=Math.max(prev,stars); S.coins+=session.coins; S.played++; touchStreak(); save(); sfx.win(); burst(120, innerHeight*.3);
+  const w=WORLDS[session.wi]; const li=session.li; const wi=session.wi;
+  const rec={ name:S.name, station:w.name, level:w.levels[li].name, stars, first, total:QS_PER_LEVEL, coins:session.coins, hints:session.hints, shown:session.shown, missed:session.missed.slice(0,6),
+    minutes: Math.max(1, Math.round((Date.now()-session.started)/60000)), ts: Date.now(), day: today(), streak:S.streak };
+  logSession(rec); postHome(Object.assign({type:'session'}, rec));
+  const nextLi = li<2 ? li+1 : null; const nextWi = li===2 && wi<WORLDS.length-1 ? wi+1 : null;
+  const msg = stars===3 ? 'Perfect batch! Sprinkles is so proud.' : stars===2 ? 'Great baking! One more go for 3 stars?' : 'You finished it! Every try makes you stronger.';
+  go(`<section class="card done"><div style="font-size:3rem">🐰🎉</div><h2>${w.name} · ${w.levels[li].name} done!</h2>
+    <div class="bigstars">${'<span class="on">★</span>'.repeat(stars)}${'<span class="off">★</span>'.repeat(3-stars)}</div>
+    <p style="margin:0">${msg}</p><div class="coinpop">+${session.coins} 🪙</div><p class="muted small" style="margin:0">${first} of ${QS_PER_LEVEL} right on the first try</p>
+    <div class="row" style="width:100%">
+      ${nextLi!==null?`<button class="btn primary" id="nextLv">Next: ${w.levels[nextLi].name} ▶</button>`:(nextWi!==null?`<button class="btn primary" id="nextW">Next station: ${WORLDS[nextWi].name} ▶</button>`:'')}
+      <button class="btn" id="again">↺ Play again</button></div>
+    <div class="row" style="width:100%"><button class="btn mint" id="shop2">🎀 Sticker shop</button><button class="btn" id="home2">🏠 Home</button></div></section>`);
+  const nl=$('#nextLv'); if(nl) nl.onclick=()=>startLevel(wi,nextLi);
+  const nw=$('#nextW'); if(nw) nw.onclick=()=>renderLevels(nextWi);
+  $('#again').onclick=()=>startLevel(wi,li); $('#shop2').onclick=renderShop; $('#home2').onclick=renderHome;
+  session=null;
+}
+function renderShop(){
+  go(`<button class="btn ghost" id="back" style="align-self:flex-start">◀ Back</button>
+    <section class="hero"><span class="face">🎀</span><div><h2>Sticker shop</h2><p class="muted" style="margin:2px 0 0">You have <b>${S.coins}</b> 🪙. Stickers go on your shelf.</p></div></section>
+    <div class="shop">${STICKERS.map((s,i)=>{ const own=S.stickers.includes(i); const can=S.coins>=s[2]; return `<button class="item ${own?'owned':(can?'':'locked')}" data-i="${i}" ${own?'disabled':''}><span class="em">${s[0]}</span><span class="nm">${s[1]}</span><span class="cost">${own?'✓ yours':s[2]+' 🪙'}</span></button>`; }).join('')}</div>`);
+  $('#back').onclick=renderHome;
+  $$('.item').forEach(b=>b.onclick=()=>{ const i=+b.dataset.i; const s=STICKERS[i]; if(S.stickers.includes(i)) return;
+    if(S.coins<s[2]){ sfx.bad(); b.classList.add('wiggle'); setTimeout(()=>b.classList.remove('wiggle'),400); return; }
+    S.coins-=s[2]; S.stickers.push(i); save(); sfx.coin(); burst(50); renderShop(); });
+}
+function renderHow(){
+  go(`<button class="btn ghost" id="back" style="align-self:flex-start">◀ Back</button>
+    <section class="card vstack"><h2>How to play</h2>
+    <p style="margin:0">🍰 Each <b>station</b> has three levels: Warm-up, Baker, and Boss. Each level is ${QS_PER_LEVEL} questions.</p>
+    <p style="margin:0">⭐ Get 5 or 6 right on the first try for <b>3 stars</b>.</p>
+    <p style="margin:0">🪙 Right first time = 10 coins. With a hint = 5. Second try = 3. No timer, ever. Take your time!</p>
+    <p style="margin:0">💡 Stuck? Tap <b>Hint</b>. Still stuck? Tap <b>Show me</b> and Sprinkles will explain it, then you move on.</p>
+    <p style="margin:0">🎀 Spend coins in the <b>Sticker shop</b>. Stickers live on your shelf at the top of the home screen.</p>
+    <p style="margin:0">🔥 Play one level a day to keep your streak!</p></section>`);
+  $('#back').onclick=renderHome;
+}
+function renderGate(){
+  const a=ri(6,9), b=ri(6,9);
+  go(`<button class="btn ghost" id="back" style="align-self:flex-start">◀ Back</button>
+    <section class="card vstack center"><h2>Grown-ups only</h2><p style="margin:0">What is ${a} × ${b}?</p>
+    <input class="txt" id="gateIn" inputmode="numeric" placeholder="Answer" autocomplete="off"><button class="btn primary" id="gateGo">Open</button></section>`);
+  $('#back').onclick=renderHome;
+  const inp=$('#gateIn'); inp.focus();
+  const tryIt=()=>{ if(parseInt(inp.value,10)===a*b) renderGrownups(); else { inp.value=''; inp.classList.add('wiggle'); setTimeout(()=>inp.classList.remove('wiggle'),400); } };
+  $('#gateGo').onclick=tryIt; inp.onkeydown=e=>{ if(e.key==='Enter') tryIt(); };
+}
+function renderGrownups(){
+  const rows = WORLDS.map((w,i)=>{ const st=S.stats[i]||{q:0,first:0,hints:0,shown:0}; const acc = st.q? Math.round(100*st.first/st.q) : null; return {w,i,st,acc}; });
+  const weak = rows.filter(r=>r.st.q>=4).sort((a,b)=>a.acc-b.acc).slice(0,2);
+  const untried = rows.filter(r=>r.st.q===0);
+  go(`<button class="btn ghost" id="back" style="align-self:flex-start">◀ Back</button>
+    <section class="card vstack"><h2>Grown-up corner</h2>
+    <p class="muted small" style="margin:0">Levels played: ${S.played} · Coins earned so far: ${S.coins + S.stickers.reduce((t,i)=>t+STICKERS[i][2],0)} · Streak: ${S.streak} day${S.streak===1?'':'s'}</p>
+    <div class="tip" id="homeBaseTip">${reportUrl()?`<b>Home base: set.</b> Finished levels go to your Google Sheet and progress follows her name across devices.`:(DB?`<b>Home base: Claude database.</b> Finished levels are recorded while she plays signed in to Claude.`:`<b>Home base: not set on this device.</b> Paste the web app link below so results reach your Google Sheet.`)}</div>
+    <div class="vstack"><input class="txt" id="reportUrlIn" placeholder="Home base link (Apps Script web app URL)" value="${esc(reportUrl())}" autocomplete="off">
+    <div class="row"><button class="btn" id="reportSave">Save link</button><button class="btn" id="reportTest">Test connection</button></div><div id="reportMsg" class="small muted"></div></div>
+    <h3>First-try accuracy by station</h3>
+    <table><thead><tr><th>Station</th><th class="num">Qs</th><th class="num">First try</th><th class="num">Shown</th><th style="width:30%">&nbsp;</th></tr></thead><tbody>
+    ${rows.map(r=>`<tr><td>${r.w.emoji} ${r.w.name}</td><td class="num">${r.st.q}</td><td class="num">${r.acc===null?'–':r.acc+'%'}</td><td class="num">${r.st.shown}</td><td><div class="meter"><i class="${r.acc===null?'':(r.acc<50?'low':(r.acc<75?'mid':''))}" style="width:${r.acc||0}%"></i></div></td></tr>`).join('')}
+    </tbody></table>
+    <p class="small muted" style="margin:0">"Shown" counts questions where she needed the full worked answer. Those are the ones to sit down with.</p>
+    ${weak.length?`<h3>Where to help this week</h3><div class="tips">${weak.map(r=>`<div class="tip"><b>${r.w.emoji} ${r.w.name} (${r.acc}% first try)</b><br>${r.w.tip}</div>`).join('')}</div>`:`<div class="tip">Once she has played a few levels, this spot will show the two stations she finds hardest and how to explain them the Singapore Math way.</div>`}
+    ${untried.length&&untried.length<WORLDS.length?`<p class="small muted" style="margin:0">Not tried yet: ${untried.map(r=>r.w.name).join(', ')}.</p>`:''}
+    ${S.missed.length?`<h3>Recent questions she needed shown</h3><ul style="margin:0;padding-left:18px;font-size:.92rem">${S.missed.slice(0,8).map(m=>`<li><b>${m.w}:</b> ${esc(m.p)}</li>`).join('')}</ul>`:''}
+    <h3>How the stations map to her book</h3>
+    <p class="small" style="margin:0">Math in Focus 4A, Chapter 6 "Fractions and Mixed Numbers": <b>Add Em Up</b> and <b>Take Away</b> are lessons 6.1 and 6.2 (like and related denominators). <b>Whole Cakes</b> covers 6.3 to 6.5 (mixed numbers, improper fractions, renaming). <b>Add Em Up Boss</b> and <b>Take Away Boss</b> cover 6.6 (renaming wholes). <b>Cookie Trays</b> is 6.7 (fraction of a set). <b>Story Time</b> is 6.8. <b>Slice It</b>, <b>Twins</b>, and <b>Bigger Bite</b> are the Grade 3 foundations the chapter assumes. If she struggles in Add Em Up, go back to Twins first: adding related denominators is really equivalent fractions in disguise.</p>
+    <h3>Settings</h3>
+    <div class="row"><button class="btn" id="renameBtn">Change her name</button><button class="btn" id="resetBtn">Reset all progress</button></div>
+    <div id="resetConfirm"></div></section>`);
+  $('#back').onclick=renderHome;
+  $('#reportSave').onclick=()=>{ const v=$('#reportUrlIn').value.trim(); try{ if(v) localStorage.setItem('fractionBakery.reportUrl', v); else localStorage.removeItem('fractionBakery.reportUrl'); }catch(e){} $('#reportMsg').textContent = v ? 'Saved on this device.' : 'Cleared.'; queueSync(); };
+  $('#reportTest').onclick=async()=>{ const v=$('#reportUrlIn').value.trim(); if(!v){ $('#reportMsg').textContent='Paste a link first.'; return; } $('#reportMsg').textContent='Testing…';
+    try{ const r=await fetch(v+(v.includes('?')?'&':'?')+'action=ping',{cache:'no-store'}); const j=await r.json(); $('#reportMsg').textContent = j&&j.ok ? `Connected to "${j.sheet||'your sheet'}". Save the link to use it.` : 'That link answered, but not like the Fraction Bakery script.'; }
+    catch(e){ $('#reportMsg').textContent='Could not reach that link. Check it was deployed as a web app that anyone can access.'; } };
+  $('#renameBtn').onclick=()=>{ S.name=''; save(); renderName(); };
+  $('#resetBtn').onclick=()=>{ $('#resetConfirm').innerHTML=`<div class="feedback bad"><div class="t">Erase stars, coins, and stickers?</div><div class="actions"><button class="btn" id="resetNo">Keep them</button><button class="btn primary" id="resetYes">Yes, erase</button></div></div>`;
+    $('#resetNo').onclick=()=>$('#resetConfirm').innerHTML=''; $('#resetYes').onclick=()=>{ const name=S.name; S=Object.assign({},DEFAULT,{name}); save(); renderHome(); }; };
+}
+
+/* ---------- boot ---------- */
+function start(data){
+  refreshPills();
+  if(data && data.session){ session=data.session; inputCtl=null; renderPlay(); return; }
+  if(!S.name) renderName(); else { renderHome(); pullProgress().then(changed=>{ if(changed && !session) renderHome(); }); }
+}
+try{ window.claude?.hot?.snapshot?.(()=>({session})); }catch(e){}
+(window.claude?.hot?.ready) ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
+</script>
+</body></html>
