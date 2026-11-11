@@ -20,6 +20,27 @@ function doGet(e) {
     try { state = JSON.parse(row.state); } catch (err) { state = null; }
     return json({ ok: true, savedAt: row.savedAt, state: state });
   }
+  if (p.action === 'recent') {
+    // Sessions from the last N hours (default 24), newest first. Used by the evening parent summary.
+    var hours = Number(p.hours) || 24;
+    var cutoff = Date.now() - hours * 3600 * 1000;
+    var sh = sheet(ss, SESSIONS, SESSION_HEADERS, 0);
+    var last = sh.getLastRow();
+    var out = [];
+    if (last >= 2) {
+      var rows = sh.getRange(2, 1, last - 1, SESSION_HEADERS.length).getValues();
+      for (var i = rows.length - 1; i >= 0; i--) {
+        var r = rows[i];
+        var ts = Number(r[1]) || 0;
+        if (ts < cutoff) continue;
+        var rec = {};
+        for (var c = 0; c < SESSION_HEADERS.length; c++) rec[SESSION_HEADERS[c]] = (r[c] instanceof Date) ? r[c].toISOString() : r[c];
+        rec.missed = String(r[14] || '').split(' | ').filter(String);
+        out.push(rec);
+      }
+    }
+    return json({ ok: true, hours: hours, count: out.length, sessions: out });
+  }
   return json({ ok: true, hint: 'Fraction Bakery home base is running.' });
 }
 
